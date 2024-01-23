@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import  "./LocationSelector.css"
+import "./LocationSelector.css";
 
 const LocationSelector = () => {
   const [countries, setCountries] = useState([]);
@@ -9,45 +9,55 @@ const LocationSelector = () => {
   const [selectedState, setSelectedState] = useState("");
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState("");
+  const [countryError, setCountryError] = useState(null);
+  const [stateError, setStateError] = useState(null);
+
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const response = await fetch(
-          'https://crio-location-selector.onrender.com/countries'
+          "https://crio-location-selector.onrender.com/countries"
         );
         const data = await response.json(); // Parse JSON response
-        console.log("fetchCountries response", data);
         setCountries(data);
+        setCountryError(null); // Clear previous errors
       } catch (error) {
         console.log("fetchCountries error", error);
+        setCountryError("Error fetching countries");
       }
     };
-  
+
     fetchCountries();
   }, []);
-  
 
   const handleCountryChange = async (event) => {
     const countryName = event.target.value;
     setSelectedCountry(countryName);
     try {
-     
-    const response = await axios.get(
+      const response = await fetch(
         `https://crio-location-selector.onrender.com/country=${countryName}/states`
       );
-      setStates(response.data);   
+      const data = await response.json();
+      setStates(data);
+      setStateError(null); // Clear previous errors
     } catch (error) {
-        console.log(error);
+      console.log("handleCountryChange error", error);
+      setStateError("Error fetching states");
     }
   };
 
   const handleStateChange = async (event) => {
     const stateName = event.target.value;
     setSelectedState(stateName);
-    const response = await axios.get(
-      `https://crio-location-selector.onrender.com/country=${selectedCountry}/state=${stateName}/cities`
-    );
-    setCities(response.data);
+    try {
+      const response = await axios.get(
+        `https://crio-location-selector.onrender.com/country=${selectedCountry}/state=${stateName}/cities`
+      );
+      setCities(response.data);
+    } catch (error) {
+      console.log("handleStateChange error", error);
+      // Handle the error, display a message or set an error state if needed
+    }
   };
 
   const handleCityChange = (event) => {
@@ -65,7 +75,7 @@ const LocationSelector = () => {
             </option>
           ))}
         </select>
-    
+        {countryError && <p>{countryError}</p>}
       </label>
       <label>
         Select State:
@@ -76,6 +86,7 @@ const LocationSelector = () => {
             </option>
           ))}
         </select>
+        {stateError && <p>{stateError}</p>}
       </label>
       <label>
         Select City:
